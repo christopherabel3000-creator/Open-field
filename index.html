@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#0f2a17">
+  <title>Open Field</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="app">
+
+    <section id="screen-title" class="screen">
+      <h1 tabindex="-1">Open Field</h1>
+      <p class="tagline">Football you play by ear. Headphones recommended.</p>
+      <div class="menu">
+        <button type="button" id="new-game">New game</button>
+        <button type="button" data-go="howto">How to play</button>
+        <button type="button" data-go="settings">Settings</button>
+      </div>
+    </section>
+
+    <section id="screen-howto" class="screen" hidden>
+      <h2 tabindex="-1">How to play</h2>
+      <p>You play a full game against the computer. Before each snap you call a play. Then you play it live: you carry the ball on runs, you throw the passes, and on defense you are the linebacker trying to make the tackle. Everything around you is heard in 3D sound, so headphones work best. The closer a player is, the louder and clearer he sounds.</p>
+
+      <h3>Calling a play</h3>
+      <p>The game reads the first play. Move through the list and pick one. Your last call is remembered, so the list starts there next time.</p>
+      <ul>
+        <li>Keyboard: up and down arrows (or left and right) to move through the list, Enter or Space to pick. Number keys pick a play directly: 1 run left, 2 run up the middle, 3 run right, 4 short pass, 5 medium pass, 6 deep pass.</li>
+        <li>Phone: swipe left or right to move through the list, double tap to pick.</li>
+        <li>S, or swipe up on the phone: score, clock, down and distance, timeouts.</li>
+        <li>R, or swipe down on the phone: repeat the last thing said.</li>
+        <li>Escape or P, or a two-finger tap on the phone: pause.</li>
+      </ul>
+      <p>On fourth down the list adds Punt and Field goal. Near the end of a half you also get a field goal on any down, Timeout when the clock is running, and Kneel down when you are ahead.</p>
+
+      <h3>Running the ball</h3>
+      <p>You hear the quarterback call two huts, then the snap and the handoff. You start running toward the hole on your own, and the line crashes into the defense in front of you. Blocked defenders are a clatter of pads that stays in one place. Free defenders are footsteps coming at you. When one is about to hit you, you hear him grunt and his gear rattle. That is your moment to make a move.</p>
+      <ul>
+        <li>Left and right arrows, or swipe left and right: cut over about two yards. Hold an arrow to keep drifting.</li>
+        <li>Space, or tap: juke. Time it for when a tackler is right on you. It has a short recovery before you can juke again.</li>
+        <li>Up arrow, or swipe up: burst of speed, once per play.</li>
+      </ul>
+      <p>A soft high blip points toward open field. Quick ticks on one side mean the sideline is close; step over it and you are out of bounds. You can turn the blip off in Settings.</p>
+
+      <h3>Passing</h3>
+      <p>You drop back with three receivers: one on the left, one over the middle, one on the right. When a receiver gets open, he calls out with a repeating tone from his direction until he is covered again. Each one has his own pitch: left is lowest, middle in between, right highest. Throw while he is open. Throwing to a covered receiver is risky. Meanwhile you hear the pass rush closing in. Wait too long and you get sacked.</p>
+      <ul>
+        <li>Left arrow, or swipe left: throw to the left receiver.</li>
+        <li>Up arrow, or swipe up: throw to the middle receiver.</li>
+        <li>Right arrow, or swipe right: throw to the right receiver.</li>
+        <li>Down arrow, or swipe down: throw it away.</li>
+      </ul>
+      <p>After a catch you are the receiver, and you run with the same controls as a running play.</p>
+
+      <h3>Defense</h3>
+      <p>Pick a defense, then play one linebacker. You face the offense, so their left is your right. You move up and back with the play on your own; you steer left and right.</p>
+      <ul>
+        <li>On a run, follow the ball carrier's footsteps. Two quick clicks mean he is in reach. Press Space or tap to tackle. Miss, or dive from too far away, and you lose a step.</li>
+        <li>On a pass, listen for the ball in the air and slide toward where it is going. Press Space or tap just as it arrives to break it up or pick it off.</li>
+        <li>Up arrow, or swipe up: burst of speed, once per play.</li>
+      </ul>
+      <p>If you do not make the play, the rest of your defense does its best without you.</p>
+
+      <h3>On a phone</h3>
+      <p>Turn VoiceOver off while you play, because VoiceOver takes over the gestures. You can use your accessibility shortcut to switch it off and back on. The game's own voice reads everything during the game.</p>
+      <p>With JAWS, the field is an application area, so your keys go straight to the game.</p>
+      <div class="menu"><button type="button" data-go="title">Back</button></div>
+    </section>
+
+    <section id="screen-settings" class="screen" hidden>
+      <h2 tabindex="-1">Settings</h2>
+      <label for="set-quarter">Quarter length</label>
+      <select id="set-quarter">
+        <option value="2">2 minutes</option>
+        <option value="3">3 minutes</option>
+        <option value="5">5 minutes</option>
+        <option value="8">8 minutes</option>
+        <option value="10">10 minutes</option>
+        <option value="15">15 minutes</option>
+      </select>
+      <label for="set-difficulty">Difficulty</label>
+      <select id="set-difficulty">
+        <option value="easy">Easy</option>
+        <option value="normal">Normal</option>
+        <option value="hard">Hard</option>
+      </select>
+      <fieldset>
+        <legend>Commentary</legend>
+        <label><input type="radio" name="voice" value="game"> Game voice</label>
+        <label><input type="radio" name="voice" value="reader"> My screen reader</label>
+      </fieldset>
+      <label for="set-rate">Game voice speed</label>
+      <select id="set-rate">
+        <option value="0.9">Slow</option>
+        <option value="1.2">Normal</option>
+        <option value="1.5">Fast</option>
+        <option value="1.9">Very fast</option>
+      </select>
+      <label for="set-volume">Sound volume</label>
+      <input type="range" id="set-volume" min="0" max="100" step="5">
+      <label class="check"><input type="checkbox" id="set-lane"> Open field blip while running</label>
+      <div class="menu">
+        <button type="button" data-go="title">Back</button>
+      </div>
+    </section>
+
+    <section id="screen-game" class="screen game" hidden>
+      <h2 class="visually-hidden" tabindex="-1">Game</h2>
+      <div id="field" role="application" aria-label="Football field" tabindex="0">
+        <p id="hud-score" class="hud-big" aria-hidden="true"></p>
+        <p id="hud-down" class="hud" aria-hidden="true"></p>
+        <p id="hud-line" class="hud" aria-hidden="true"></p>
+      </div>
+      <div id="pause-menu" hidden>
+        <h2 tabindex="-1">Paused</h2>
+        <div class="menu">
+          <button type="button" id="pause-resume">Resume</button>
+          <button type="button" id="pause-quit">Quit game</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-final" class="screen" hidden>
+      <h2 tabindex="-1" id="final-title">Final</h2>
+      <p id="final-stats"></p>
+      <div class="menu">
+        <button type="button" id="again">Play again</button>
+        <button type="button" data-go="title">Main menu</button>
+      </div>
+    </section>
+
+    <div id="live" class="visually-hidden" aria-live="assertive" aria-atomic="true"></div>
+  </main>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
