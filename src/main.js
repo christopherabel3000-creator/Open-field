@@ -407,7 +407,7 @@ function cadence(then) {
       const v = placedVoice(x, los + 0.5);
       S.padClash(engine, v.input, engine.now + rand(0.05, 0.18), 0.7);
     }
-    engine.setCrowd(0.5, 0.3);
+    engine.setCrowd(playInfo.kind === 'run' ? 0.45 : 0.25, 0.3);
     mode = 'play';
     ignoreUntil = 0;
     then();
@@ -464,6 +464,24 @@ function placedVoice(x, y, loud = 1) {
   const v = engine.createVoice(r.right, r.forward, loud);
   engine.disposeVoice(v, 2);
   return v;
+}
+
+// A clear, stereo-panned sound for the cues that matter most (receivers, the ball, the carrier).
+// It works on phone speakers too, where 3D sound is hard to place.
+function panned(pan, gain) {
+  const g = engine.createNear(Math.max(-1, Math.min(1, pan)), gain);
+  setTimeout(() => { try { g.disconnect(); if (g.pan) g.pan.disconnect(); } catch (e) { /* gone */ } }, 2500);
+  return g;
+}
+function nearAt(x, y, scale = 1) {
+  const r = rel(x, y);
+  const d = Math.hypot(r.right, r.forward);
+  return panned(r.right / 9, scale / (1 + d / 14));
+}
+const RECEIVER_PAN = [-0.85, 0, 0.85];
+function receiverCue(i, now) {
+  S.open(engine, panned(RECEIVER_PAN[i], 1), now, i);
+  cues.open[i] = now + 0.32;
 }
 
 // Steady voices for players who keep moving (defenders, the ball carrier, the ball).
@@ -542,17 +560,13 @@ function soundFrame() {
     if (play.phase === 'dropback') {
       // Receivers who are open call out with their tone, again and again until covered.
       play.receivers.forEach((rc, i) => {
-        if (rc.open && now >= cues.open[i]) {
-          const v = placedVoice(rc.x, rc.y, 1.3);
-          S.open(engine, v.input, now, i);
-          cues.open[i] = now + 0.28;
-        }
+        if (rc.open && now >= cues.open[i]) receiverCue(i, now);
       });
       // The pass rush.
       play.rushers.forEach((ru, i) => {
         const s = liveVoice('r' + i, ru.x, ru.y, 1.1);
-        if (now >= s.nextStep) { S.footstep(engine, s.voice.input, now, 1.3); s.nextStep = now + 0.3; }
-        if (now >= s.nextClash) { S.padClash(engine, s.voice.input, now, 0.4); s.nextClash = now + rand(0.4, 0.9); }
+        if (now >= s.nextStep) { S.footstep(engine, s.voice.input, now, 0.8); s.nextStep = now + 0.32; }
+        if (now >= s.nextClash) { S.padClash(engine, s.voice.input, now, 0.22); s.nextClash = now + rand(0.5, 1.0); }
       });
       if (now >= cues.mine && play.t < 1.2) {
         S.myStep(engine, engine.createNear(0, 1), now);
@@ -567,8 +581,8 @@ function soundFrame() {
   const m = play.me;
   if (play.carrier && (play.phase === 'run' || play.phase === 'rac')) {
     const c = play.carrier;
-    const s = liveVoice('carrier', c.x, c.y, 1.2);
-    if (now >= s.nextStep) { S.footstep(engine, s.voice.input, now, 0.9); s.nextStep = now + 0.24; }
+    const s = liveVoice('carrier', c.x, c.y, 0.5);
+    if (now >= s.nextStep) { S.carrierStep(engine, nearAt(c.x, c.y, 1.4), now); s.nextStep = now + 0.24; }
     if (play.phase === 'run' && play.t < 2 && now >= s.nextClash) {
       const v = placedVoice(rand(-4, 4), playInfo.los + 0.5);
       S.padClash(engine, v.input, now, 0.4);
@@ -583,7 +597,17 @@ function soundFrame() {
       s.nextClash = now + rand(0.3, 0.6);
     }
   }
-  if (play.ball && play.phase === 'flight') liveVoice('ball', play.ball.x ?? play.qb.x, play.ball.y ?? play.qb.y, 1);
+  if (play.ball && play.phase === 'flight') {
+    const b = play.ball;
+    liveVoice('ball', b.x ?? play.qb.x, b.y ?? play.qb.y, 0.6);
+    // A beacon where the ball will come down: faster as it gets there, higher when you are lined up.
+    const left = b.start + b.flight - play.t;
+    if (now >= cues.lane) {
+      const aligned = Math.abs(m.x - b.to.x) <= 2.5;
+      S.beacon(engine, nearAt(b.to.x, b.to.y, 1.6), now, aligned);
+      cues.lane = now + Math.max(0.07, Math.min(0.3, left * 0.28));
+    }
+  }
   const moving = Math.abs(m.targetX - m.x) > 0.3 || play.phase !== 'drop';
   if (moving && now >= cues.mine) {
     S.myStep(engine, engine.createNear(0, 1), now);
@@ -609,10 +633,10 @@ function onPlayEvent(type, d) {
     case 'tackle': S.tackled(engine, near(), now); break;
     case 'shed': S.grunt(engine, at(d), now, 1, 0.35); break;
     case 'armMiss': S.padClash(engine, at(d), now, 0.6); break;
-    case 'open': S.open(engine, at(d, 1.3), now, d.i); cues.open[d.i] = now + 0.28; break;
+    case 'open': receiverCue(d.i, now); break;
     case 'throw':
       S.throwBall(engine, near(), now);
-      if (playInfo.kind === 'defense') S.throwBall(engine, placedVoice(d.from.x, d.from.y, 1.2).input, now);
+      if (playInfo.kind === 'defense') { S.throwBall(engine, placedVoice(d.from.x, d.from.y, 1.2).input, now); S.thrownToward(engine, nearAt(d.to.x, d.to.y, 1.8), now + 0.05); cues.lane = now + 0.25; }
       {
         const s = liveVoice('ball', d.from.x, d.from.y, 1);
         S.ballFlight(engine, s.voice.input, now, d.flight);

@@ -314,7 +314,7 @@ export class PassPlay {
       };
       if (Math.random() > neverOpen) {
         r.openAt = rand(base[0], base[1]) + earlier + rand(-0.2, 0.2);
-        r.closeAt = r.openAt + rand(0.45, 1.05) * winMul;
+        r.closeAt = r.openAt + rand(0.75, 1.4) * winMul;
       }
       return r;
     });
@@ -731,7 +731,7 @@ export function planOffense(choice, call, diff, los) {
   const side = [-1, 0, 1][Math.floor(Math.random() * 3)];
   const depthYards = Math.min(baseDepth + rand(-2, 2) * (depthName === 'deep' ? 2 : 1), toGoal + 2);
   const landX = side * 15 + rand(-3, 3) + (side === 0 ? -3 : 0);
-  const flight = { short: 0.55, medium: 0.9, deep: 1.5 }[depthName];
+  const flight = { short: 0.85, medium: 1.25, deep: 1.85 }[depthName];
   const throwTime = rand(1.4, 2.6) + (depthName === 'deep' ? 0.6 : 0);
   if (r < sack) return { type: 'pass', depth: depthName, outcome: 'sack', yards: -Math.round(rand(4, 9)), throwTime: throwTime + 0.6 };
   let outcome;

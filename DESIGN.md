@@ -32,7 +32,9 @@ You hear the field from where you stand, in 3D sound (best with headphones). Clo
 | Grunt and rattling gear | A defender about to hit you: the moment to juke |
 | Soft high blip | Points toward open field (can be turned off) |
 | Quick ticks on one side | The sideline is close on that side |
-| Repeating tone from one direction | A receiver is open. Left is the lowest pitch, middle in between, right highest |
+| Repeating two-note call, left ear, both ears or right ear | A receiver is open. Left is the lowest pitch, middle in between, right highest |
+| Rising tone, then a ticking beacon (defense) | Where a thrown ball will land. Higher pitch when you are lined up; faster ticks as it arrives |
+| Bright, quick cleats (defense) | The ball carrier |
 | Rushing spiral | The ball in the air |
 | Two quick clicks (defense) | The ball carrier is in reach |
 | Crowd | Rises with big plays and near the end zone |

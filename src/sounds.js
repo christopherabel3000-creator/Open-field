@@ -175,9 +175,27 @@ export function kick(e, dest, t) {
 
 // A receiver who has gotten open: a short tone from his direction.
 // Each receiver has his own pitch: left lowest, middle in between, right highest.
-export const RECEIVER_PITCH = [520, 700, 900];
+export const RECEIVER_PITCH = [520, 700, 940];
 export function open(e, dest, t, i) {
-  tone(e, dest, t, { type: 'triangle', freq: RECEIVER_PITCH[i], dur: 0.09, gain: 0.5 });
+  const f = RECEIVER_PITCH[i];
+  tone(e, dest, t, { type: 'triangle', freq: f, dur: 0.09, gain: 0.7 });
+  tone(e, dest, t + 0.11, { type: 'triangle', freq: f * 1.25, dur: 0.09, gain: 0.7 });
+}
+
+// The ball carrier you are chasing on defense: quick, bright cleats you can pick out.
+export function carrierStep(e, dest, t) {
+  noise(e, dest, t, { freq: rand(1100, 1500), q: 2, dur: 0.05, gain: 0.8 });
+  tone(e, dest, t, { freq: 150, freqEnd: 70, dur: 0.06, gain: 0.5 });
+}
+
+// Where a thrown ball will land. Higher pitch when you are lined up under it.
+export function beacon(e, dest, t, aligned) {
+  tone(e, dest, t, { type: 'square', freq: aligned ? 1320 : 760, dur: 0.04, gain: 0.22, filter: { freq: 3000 } });
+}
+
+// The ball leaving the quarterback's hand, sweeping toward where it is headed.
+export function thrownToward(e, dest, t) {
+  tone(e, dest, t, { freq: 500, freqEnd: 1100, dur: 0.25, gain: 0.45 });
 }
 
 // The ball in the air: a rushing spiral, played through a moving voice.
