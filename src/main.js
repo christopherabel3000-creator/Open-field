@@ -11,7 +11,7 @@ const SAVE_KEY = 'open-field-v1';
 const $ = (id) => document.getElementById(id);
 const rand = (a, b) => a + Math.random() * (b - a);
 
-const defaults = { voice: 'game', rate: 1.2, quarter: 5, difficulty: 'normal', volume: 90, laneHint: true };
+const defaults = { voice: 'game', rate: 1.2, quarter: 5, difficulty: 'normal', volume: 90, laneHint: false };
 function loadSettings() {
   try { return Object.assign({}, defaults, JSON.parse(localStorage.getItem(SAVE_KEY) || '{}').settings || {}); }
   catch (e) { return { ...defaults }; }
@@ -403,11 +403,12 @@ function cadence(then) {
     S.snap(engine, near, engine.now);
     // Both lines crash together.
     const los = playInfo.los;
-    for (const x of [-5, -2.5, 0, 2.5, 5]) {
+    const crash = playInfo.kind === 'run' ? [-4, 0, 4] : [0];
+    for (const x of crash) {
       const v = placedVoice(x, los + 0.5);
-      S.padClash(engine, v.input, engine.now + rand(0.05, 0.18), 0.7);
+      S.padClash(engine, v.input, engine.now + rand(0.05, 0.15), 0.5);
     }
-    engine.setCrowd(playInfo.kind === 'run' ? 0.45 : 0.25, 0.3);
+    engine.setCrowd(playInfo.kind === 'pass' ? 0.05 : 0.2, 0.3);
     mode = 'play';
     ignoreUntil = 0;
     then();
@@ -511,15 +512,19 @@ function soundFrame() {
 
   if (runPlay) {
     const r = runPlay.runner;
+    // Only the three closest free defenders are heard, so the ones that matter stand out.
+    const loud = new Set(runPlay.defenders
+      .filter(df => df.state === 'free')
+      .sort((a, b) => Math.hypot(a.x - r.x, a.y - r.y) - Math.hypot(b.x - r.x, b.y - r.y))
+      .slice(0, 3));
     runPlay.defenders.forEach((df, i) => {
       const s = liveVoice('d' + i, df.x, df.y);
       if (df.state === 'blocked') {
-        if (now >= s.nextClash) {
-          S.padClash(engine, s.voice.input, now, 0.45);
-          if (Math.random() < 0.3) S.grunt(engine, s.voice.input, now + 0.04, rand(0.8, 1.1), 0.3);
-          s.nextClash = now + rand(0.35, 0.8);
+        if (runPlay.t < 1.5 && Math.hypot(df.x - r.x, df.y - r.y) < 8 && now >= s.nextClash) {
+          S.padClash(engine, s.voice.input, now, 0.25);
+          s.nextClash = now + rand(0.6, 1.1);
         }
-      } else if (df.state !== 'down') {
+      } else if (loud.has(df)) {
         const speed = Math.hypot(df.vx, df.vy);
         if (speed > 1.5 && now >= s.nextStep) {
           S.footstep(engine, s.voice.input, now, df.kind === 'lineman' ? 1.3 : 1.0);
@@ -552,7 +557,7 @@ function soundFrame() {
     }
     // The crowd rises as you near the end zone or break into the open.
     const toGo = 100 - r.y;
-    engine.setCrowd(Math.min(1, 0.5 + Math.max(0, (20 - toGo) / 30) + (r.y - playInfo.los > 12 ? 0.25 : 0)), 0.5);
+    engine.setCrowd(Math.min(0.8, 0.2 + Math.max(0, (20 - toGo) / 30) + (r.y - playInfo.los > 12 ? 0.3 : 0)), 0.5);
     return;
   }
 
@@ -562,15 +567,11 @@ function soundFrame() {
       play.receivers.forEach((rc, i) => {
         if (rc.open && now >= cues.open[i]) receiverCue(i, now);
       });
-      // The pass rush.
-      play.rushers.forEach((ru, i) => {
-        const s = liveVoice('r' + i, ru.x, ru.y, 1.1);
-        if (now >= s.nextStep) { S.footstep(engine, s.voice.input, now, 0.8); s.nextStep = now + 0.32; }
-        if (now >= s.nextClash) { S.padClash(engine, s.voice.input, now, 0.22); s.nextClash = now + rand(0.5, 1.0); }
-      });
-      if (now >= cues.mine && play.t < 1.2) {
-        S.myStep(engine, engine.createNear(0, 1), now);
-        cues.mine = now + 0.3;
+      // The pass rush is one low beat that speeds up as it closes in, nothing else.
+      const left = play.sackAt - play.t;
+      if (play.t > 1.0 && now >= cues.mine) {
+        S.pressure(engine, engine.createNear(0, 1), now, left < 1);
+        cues.mine = now + Math.max(0.15, Math.min(0.7, left * 0.3));
       }
     }
     if (play.ball && play.phase === 'flight') liveVoice('ball', play.ball.x ?? play.qb.x, play.ball.y ?? play.qb.y, 1);
@@ -583,7 +584,7 @@ function soundFrame() {
     const c = play.carrier;
     const s = liveVoice('carrier', c.x, c.y, 0.5);
     if (now >= s.nextStep) { S.carrierStep(engine, nearAt(c.x, c.y, 1.4), now); s.nextStep = now + 0.24; }
-    if (play.phase === 'run' && play.t < 2 && now >= s.nextClash) {
+    if (play.phase === 'run' && play.t < 0.9 && now >= s.nextClash) {
       const v = placedVoice(rand(-4, 4), playInfo.los + 0.5);
       S.padClash(engine, v.input, now, 0.4);
       s.nextClash = now + rand(0.25, 0.5);
@@ -591,10 +592,10 @@ function soundFrame() {
   } else if (play.phase === 'drop') {
     const s = liveVoice('qb', play.qb.x, play.qb.y, 0.9);
     if (play.t < 1.5 && now >= s.nextStep) { S.footstep(engine, s.voice.input, now, 0.9); s.nextStep = now + 0.3; }
-    if (now >= s.nextClash) {
+    if (play.t < 0.9 && now >= s.nextClash) {
       const v = placedVoice(rand(-4, 4), playInfo.los + 0.5);
-      S.padClash(engine, v.input, now, 0.4);
-      s.nextClash = now + rand(0.3, 0.6);
+      S.padClash(engine, v.input, now, 0.25);
+      s.nextClash = now + rand(0.4, 0.7);
     }
   }
   if (play.ball && play.phase === 'flight') {
@@ -607,11 +608,6 @@ function soundFrame() {
       S.beacon(engine, nearAt(b.to.x, b.to.y, 1.6), now, aligned);
       cues.lane = now + Math.max(0.07, Math.min(0.3, left * 0.28));
     }
-  }
-  const moving = Math.abs(m.targetX - m.x) > 0.3 || play.phase !== 'drop';
-  if (moving && now >= cues.mine) {
-    S.myStep(engine, engine.createNear(0, 1), now);
-    cues.mine = now + 0.3;
   }
   if (Math.abs(m.x) > SIDELINE - 4 && now >= cues.side) {
     S.sideline(engine, engine.createNear(m.x > 0 ? -1 : 1, 0.8), now);

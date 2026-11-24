@@ -31,7 +31,7 @@ export class AudioEngine {
     this.reverb = ctx.createConvolver();
     this.reverb.buffer = this._impulse(1.8, 2.6);
     this.reverbOut = ctx.createGain();
-    this.reverbOut.gain.value = 0.55;
+    this.reverbOut.gain.value = 0.3;
     this.reverb.connect(this.reverbOut);
     this.reverbOut.connect(this.master);
 

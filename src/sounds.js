@@ -57,7 +57,7 @@ export function footstep(e, dest, t, weight = 1) {
 }
 
 export function myStep(e, dest, t) {
-  noise(e, dest, t, { freq: rand(1400, 2000), q: 1.6, dur: 0.035, gain: 0.18 });
+  noise(e, dest, t, { freq: rand(1400, 2000), q: 1.6, dur: 0.035, gain: 0.08 });
 }
 
 // Pads cracking together: blockers and defenders fighting at the line.
@@ -219,6 +219,11 @@ export function ballFlight(e, dest, t, dur) {
 }
 
 // ---------- Cues ----------
+
+// The pass rush closing in: a low beat in front of you. Sharper in the last second.
+export function pressure(e, dest, t, urgent) {
+  tone(e, dest, t, { freq: urgent ? 120 : 85, freqEnd: 55, dur: 0.12, gain: urgent ? 0.5 : 0.32 });
+}
 
 // You are close enough to make the tackle.
 export function inRange(e, dest, t) {
